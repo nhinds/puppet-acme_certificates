@@ -1,0 +1,11 @@
+{
+  "name": "nhinds-acme_certificates",
+  "version": "0.1.0",
+  "author": "nhinds",
+  "summary": "Manages certificates on disk using an ACME Certificate Authority such as Let's Encrypt",
+  "license": "Apache 2.0",
+  "source": "https://github.com/nhinds/puppet-acme_certificates",
+  "project_page": "https://github.com/nhinds/puppet-acme_certificates",
+  "issues_url": "https://github.com/nhinds/puppet-acme_certificates/issues"
+}
+
