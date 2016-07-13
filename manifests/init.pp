@@ -1,41 +1,35 @@
 # == Class: acme_certificates
 #
-# Full description of class acme_certificates here.
+# Configures the default settings for certificates managed by this puppet module.
 #
 # === Parameters
 #
-# Document parameters here.
+# [*contact*]
+#   The contact information used to register with the ACME server.
+#   e.g. 'mailto:cert-admin@example.com' or 'tel:+12025551212'
 #
-# [*sample_parameter*]
-#   Explanation of what this parameter affects and what it defaults to.
-#   e.g. "Specify one or more upstream ntp servers as an array."
+# [*directory*]
+#   The ACME server's directory URL. Defaults to the Let's Encrypt staging environment.
 #
-# === Variables
-#
-# Here you should define a list of variables that this module would require.
-#
-# [*sample_variable*]
-#   Explanation of how this variable affects the funtion of this class and if
-#   it has a default. e.g. "The parameter enc_ntp_servers must be set by the
-#   External Node Classifier as a comma separated list of hostnames." (Note,
-#   global variables should be avoided in favor of class parameters as
-#   of Puppet 2.6.)
+# [*agree_to_terms_url*]
+#   The URL of the terms of service of the ACME server to agree to. By setting this, you agree to the terms of service of the ACME server.
+#   This must be set if the ACME server requires ACME clients to agree to terms of service.
 #
 # === Examples
 #
 #  class { 'acme_certificates':
-#    servers => [ 'pool.ntp.org', 'ntp.local.company.com' ],
+#    contact            => 'mailto:cert-admin@example.com',
+#    directory          => 'https://acme-v01.api.letsencrypt.org/directory',
+#    agree_to_terms_url => 'https://letsencrypt.org/documents/LE-SA-v1.0.1-July-27-2015.pdf',
 #  }
-#
-# === Authors
-#
-# Author Name <author@domain.com>
 #
 # === Copyright
 #
-# Copyright 2016 Your name here, unless otherwise noted.
+# Copyright 2016 Nicholas Hinds, unless otherwise noted.
 #
-class acme_certificates {
-
-
+class acme_certificates(
+  $contact            = undef,
+  $directory          = 'https://acme-staging.api.letsencrypt.org/directory',
+  $agree_to_terms_url = undef,
+) {
 }
