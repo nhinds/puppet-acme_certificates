@@ -6,5 +6,8 @@
   "license": "Apache-2.0",
   "source": "https://github.com/nhinds/puppet-acme_certificates",
   "project_page": "https://github.com/nhinds/puppet-acme_certificates",
-  "issues_url": "https://github.com/nhinds/puppet-acme_certificates/issues"
+  "issues_url": "https://github.com/nhinds/puppet-acme_certificates/issues",
+  "dependencies": [
+    { "name": "puppetlabs/stdlib", "version_requirement": ">= 4.12.0 < 5.0.0" }
+  ]
 }
