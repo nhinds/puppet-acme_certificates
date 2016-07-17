@@ -80,12 +80,12 @@ Setup default values with the main `acme_certificates` class, then request certi
 
 ### Classes
 
-* [`acme_certificates`](#acme_certificates): Configures the default settings for certificates managed by this puppet module.
+* [`acme_certificates`](#acme_certificates-1): Configures the default settings for certificates managed by this puppet module.
 * [`acme_certificates::gems`](#acme_certificatesgems): Installs required gems for this module.
 
 ### Defines
 
-* [`acme_certificates::cert`](#acme_certificates): Manage a certificate on disk signed by an ACME server.
+* [`acme_certificates::cert`](#acme_certificatescert): Manage a certificate on disk signed by an ACME server.
 
 ### `acme_certificates`
 
