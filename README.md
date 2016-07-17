@@ -35,6 +35,15 @@ Currently supports DNS domain authorization by creating DNS records in AWS Route
 * Generates CSRs based on new or existing private keys, and gets them signed by the ACME CA
 * Writes the certificates and private keys to disk at a user-specified location
 
+### Setup requirements
+
+* To use the builtin DNS domain authorization with Route 53:
+  * You must have a Route 53 hosted zone for the domain (or subdomain) you wish to generate certificates for. The domain must be set up to
+    delegate DNS requests to your Route 53 hosted zone (i.e. `nslookup <record>.<your domain or subdomain>` must resolve from Route 53)
+  * You must have AWS credentials with permissions to call `route53:ChangeResourceRecordSets` and `route53:GetChange` for your hosted zone
+* The `acme-client` and `aws-sdk` gems must be installed on your puppet agents, either manually or by specifying the
+  `acme_certificates::manage_gems` parameter
+
 ### Beginning with acme_certificates
 
 ```
