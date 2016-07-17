@@ -22,6 +22,9 @@ Puppet::Type.type(:acme_certificate).provide(:route_53, :parent => Puppet::Provi
         # Wait for up to 5 minutes, checking every 5 seconds
         w.max_attempts = 60
         w.delay = 5
+        w.before_wait do |attempts, response|
+          Puppet.debug("Route 53 changes not yet propagated, waiting (#{attempts}/60)")
+        end
       end
     end
   end

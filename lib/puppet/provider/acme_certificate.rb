@@ -4,30 +4,44 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
 
   def exists?
     Puppet.debug("Checking existence of #{resource[:certificate_path]}")
-    if File.exist? resource[:certificate_path]
-      # TODO check certificate matches common_name and alternate_names and/or make them properties and define self.prefetch + flush
-      # TODO check expiry
-      true
+    if !File.exist? resource[:private_key_path]
+      Puppet.debug("Private key #{resource[:private_key_path]} does not exist, so the certificate cannot be valid")
+      false
+    elsif !File.exist? resource[:certificate_path]
+      Puppet.debug("Certificate #{resource[:certificate_path]} does not exist")
+      false
+    else
+      cert = ::OpenSSL::X509::Certificate.new(File.read resource[:certificate_path])
+      key = ::OpenSSL::PKey::RSA.new(File.read resource[:private_key_path])
+      if cert.public_key.to_der != key.public_key.to_der
+        Puppet.debug("Certificate #{resource[:certificate_path]} does not match private key #{resource[:private_key_path]}")
+        false
+      elsif cert.subject.to_s != csr.csr.subject.to_s
+        Puppet.debug("Certificate #{resource[:certificate_path]} has subject '#{cert.subject}', expecting '#{csr.csr.subject}'")
+        false
+      else
+        cert_alternate_names = cert.extensions.select {|e| e.oid == "subjectAltName"}.map { |e| e.value.split(',').map(&:strip) }.first || []
+        csr_alternate_names = csr.names.map { |name| "DNS:#{name}" }
+        if cert_alternate_names.sort != csr_alternate_names.sort
+          Puppet.debug("Certificate #{resource[:certificate_path]} has alternative names #{cert_alternate_names}, but wanted #{csr_alternate_names}")
+          false
+        else
+          # TODO check expiry
+          true
+        end
+      end
     end
   end
 
   def create
     Puppet.debug("Creating certificate #{resource[:certificate_path]}")
-    csr_params = {
-      common_name: resource[:common_name],
-      names: resource[:alternate_names],
-    }
-    if File.exist? resource[:private_key_path]
-      csr_params[:private_key] = ::OpenSSL::PKey::RSA.new(File.read resource[:private_key_path])
-    elsif !resource[:generate_private_key]
-      fail "Could not generate certificate #{resource[:certificate_path]}: private key #{resource[:private_key_path]} does not exist"
-    end
+    private_key_existed = File.exist? resource[:private_key_path]
 
     register_client
     authorize_domains
 
-    cert = acme_client.new_certificate(::Acme::Client::CertificateRequest.new(csr_params))
-    if resource[:generate_private_key]
+    cert = acme_client.new_certificate(csr)
+    if resource[:generate_private_key] && !private_key_existed
       Puppet.debug("Writing private key to #{resource[:private_key_path]}")
       File.write(resource[:private_key_path], cert.request.private_key.to_pem)
     end
@@ -127,7 +141,23 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
     URI.join(resource[:directory], "/").to_s
   end
 
-  # Get the private key to use with the ACME client. This is the puppet agent's private key.
+  def csr
+    @csr ||= begin
+      csr_params = {
+        common_name: resource[:common_name],
+        names: resource[:alternate_names],
+      }
+      if File.exist? resource[:private_key_path]
+        csr_params[:private_key] = ::OpenSSL::PKey::RSA.new(File.read resource[:private_key_path])
+      elsif !resource[:generate_private_key]
+        fail "Could not generate certificate #{resource[:certificate_path]}: private key #{resource[:private_key_path]} does not exist"
+      end
+
+      ::Acme::Client::CertificateRequest.new(csr_params)
+    end
+  end
+
+  # Get the private key to use with the ACME client. This is the puppet agent's private key. TODO make this configurable?
   def self.acme_private_key
     ::OpenSSL::PKey::RSA.new(File.read Puppet[:hostprivkey])
   rescue => e

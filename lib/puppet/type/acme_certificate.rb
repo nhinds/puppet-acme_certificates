@@ -7,14 +7,10 @@ Puppet::Type.newtype(:acme_certificate) do
   newparam(:certificate_chain_path)
   newparam(:combine_certificate_and_chain)
 
-  # TODO consider changing some of these parameters into properties
-
   newparam(:common_name)
   newparam(:alternate_names)
   newparam(:private_key_path)
   newparam(:generate_private_key)
-
-  # TODO file permissions for certificate and private key?
 
   newparam(:contact)
   newparam(:directory)
