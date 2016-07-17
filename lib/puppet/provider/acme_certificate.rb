@@ -19,6 +19,9 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
       elsif cert.subject.to_s != csr.csr.subject.to_s
         Puppet.debug("Certificate #{resource[:certificate_path]} has subject '#{cert.subject}', expecting '#{csr.csr.subject}'")
         false
+      elsif cert.not_after - resource[:renew_within_days] * 60 * 60 * 24 < Time.now
+        Puppet.debug("Certificate #{resource[:certificate_path]} will expire at '#{cert.not_after}', which is within #{resource[:renew_within_days]} days")
+        false
       else
         cert_alternate_names = cert.extensions.select {|e| e.oid == "subjectAltName"}.map { |e| e.value.split(',').map(&:strip) }.first || []
         csr_alternate_names = csr.names.map { |name| "DNS:#{name}" }
@@ -26,7 +29,6 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
           Puppet.debug("Certificate #{resource[:certificate_path]} has alternative names #{cert_alternate_names}, but wanted #{csr_alternate_names}")
           false
         else
-          # TODO check expiry
           true
         end
       end

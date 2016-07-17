@@ -21,6 +21,9 @@
 # [*authorization_timeout*]
 #   The time, in seconds, to wait for the ACME server to process pending domain authorizations before timing out. Defaults to 5 minutes.
 #
+# [*renew_within_days*]
+#   If an existing certificate would expire within this many days, it will be renewed. Defaults to 30 days.
+#
 # [*aws_access_key_id*]
 #   The AWS Access Key ID to use to modify Route 53 records to authorize domains.
 #   Defaults to no credentials (e.g. will use the AWS SDK default methods for finding credentials, or fail trying to look them up)
@@ -51,6 +54,7 @@ class acme_certificates(
   $directory             = 'https://acme-staging.api.letsencrypt.org/directory',
   $agree_to_terms_url    = undef,
   $authorization_timeout = 300,
+  $renew_within_days     = 30,
   $aws_access_key_id     = undef,
   $aws_secret_access_key = undef,
   $route53_zone_id       = undef,

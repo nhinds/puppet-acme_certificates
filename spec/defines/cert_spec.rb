@@ -104,6 +104,10 @@ describe 'acme_certificates::cert' do
     authorization_timeout: {
       default: 300,
       override: 600
+    },
+    renew_within_days: {
+      default: 30,
+      override: 7
     }
   }.each do |param, options|
     context "when #{param} is specified" do

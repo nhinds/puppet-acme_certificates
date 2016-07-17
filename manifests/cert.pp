@@ -60,6 +60,10 @@
 #   The time, in seconds, to wait for the ACME server to process pending domain authorizations before timing out.
 #   Defaults to the value from the acme_certificates class
 #
+# [*renew_within_days*]
+#   If an existing certificate would expire within this many days, it will be renewed.
+#   Defaults to the value from the acme_certificates class
+#
 # [*aws_access_key_id*]
 #   The AWS Access Key ID to use to modify Route 53 records to authorize the domain for this certificate.
 #   Defaults to the value from the acme_certificates class
@@ -103,6 +107,7 @@ define acme_certificates::cert(
   $directory = undef,
   $agree_to_terms_url = undef,
   $authorization_timeout = undef,
+  $renew_within_days = undef,
   $aws_access_key_id = undef,
   $aws_secret_access_key = undef,
   $route53_zone_id = undef,
@@ -129,11 +134,13 @@ define acme_certificates::cert(
   $_agree_to_terms_url = pick_default($agree_to_terms_url, $::acme_certificates::agree_to_terms_url)
 
   $_authorization_timeout = pick($authorization_timeout, $::acme_certificates::authorization_timeout)
+  $_renew_within_days = pick($renew_within_days, $::acme_certificates::renew_within_days)
   $_aws_access_key_id = pick_default($aws_access_key_id, $::acme_certificates::aws_access_key_id)
   $_aws_secret_access_key = pick_default($aws_secret_access_key, $::acme_certificates::aws_secret_access_key)
   $_route53_zone_id = pick_default($route53_zone_id, $::acme_certificates::route53_zone_id)
   validate_string($_contact, $_directory, $_agree_to_terms_url, $_aws_access_key_id, $_aws_secret_access_key, $_route53_zone_id)
   validate_integer($_authorization_timeout)
+  validate_integer($_renew_within_days)
 
   acme_certificate { $certificate_path:
     ensure                        => present,
@@ -147,6 +154,7 @@ define acme_certificates::cert(
     directory                     => $_directory,
     agree_to_terms_url            => $_agree_to_terms_url,
     authorization_timeout         => $_authorization_timeout,
+    renew_within_days             => $_renew_within_days,
     # AWS-specific parameters for authorizing the domain
     aws_access_key_id             => $_aws_access_key_id,
     aws_secret_access_key         => $_aws_secret_access_key,

@@ -114,6 +114,9 @@ This must be set if the ACME server requires ACME clients to agree to terms of s
 ##### `authorization_timeout`
 The time, in seconds, to wait for the ACME server to process pending domain authorizations before timing out. Defaults to 5 minutes.
 
+##### `renew_within_days`
+If an existing certificate would expire within this many days, it will be renewed. Defaults to 30 days.
+
 ##### `aws_access_key_id`
 The AWS Access Key ID to use to modify Route 53 records to authorize domains.
 
@@ -204,6 +207,11 @@ Defaults to the value from the `acme_certificates` class
 
 ##### `authorization_timeout`
 The time, in seconds, to wait for the ACME server to process pending domain authorizations before timing out.
+
+Defaults to the value from the `acme_certificates` class
+
+##### `renew_within_days`
+If an existing certificate would expire within this many days, it will be renewed.
 
 Defaults to the value from the `acme_certificates` class
 

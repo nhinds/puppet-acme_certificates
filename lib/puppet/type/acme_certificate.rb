@@ -17,6 +17,7 @@ Puppet::Type.newtype(:acme_certificate) do
   newparam(:agree_to_terms_url)
 
   newparam(:authorization_timeout)
+  newparam(:renew_within_days)
 
   newparam(:aws_access_key_id)
   newparam(:aws_secret_access_key)
