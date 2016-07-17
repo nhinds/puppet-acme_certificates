@@ -117,6 +117,11 @@ The time, in seconds, to wait for the ACME server to process pending domain auth
 ##### `renew_within_days`
 If an existing certificate would expire within this many days, it will be renewed. Defaults to 30 days.
 
+##### `acme_private_key_path`
+The path to the private key file to use for ACME registration (not the certificate private key). If specified, this file must already exist.
+
+Defaults to registering with the ACME server using the puppet agent's private key.
+
 ##### `aws_access_key_id`
 The AWS Access Key ID to use to modify Route 53 records to authorize domains.
 
@@ -212,6 +217,11 @@ Defaults to the value from the `acme_certificates` class
 
 ##### `renew_within_days`
 If an existing certificate would expire within this many days, it will be renewed.
+
+Defaults to the value from the `acme_certificates` class
+
+##### `acme_private_key_path`
+The path to the private key file to use for ACME registration (not the certificate private key). If specified, this file must already exist.
 
 Defaults to the value from the `acme_certificates` class
 

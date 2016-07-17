@@ -135,7 +135,7 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
   end
 
   def acme_client
-    @acme_client ||= ::Acme::Client.new(private_key: self.class.acme_private_key, directory_uri: resource[:directory], endpoint: endpoint)
+    @acme_client ||= ::Acme::Client.new(private_key: acme_private_key, directory_uri: resource[:directory], endpoint: endpoint)
   end
 
   # TODO this annoys me, should not be necessary
@@ -159,10 +159,19 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
     end
   end
 
-  # Get the private key to use with the ACME client. This is the puppet agent's private key. TODO make this configurable?
-  def self.acme_private_key
-    ::OpenSSL::PKey::RSA.new(File.read Puppet[:hostprivkey])
+  # Get the private key to use with the ACME client.
+  def acme_private_key
+    ::OpenSSL::PKey::RSA.new(File.read(acme_private_key_path))
   rescue => e
-    fail "Could not load puppet private key from #{Puppet[:hostprivkey]} to register with ACME server: #{e}"
+    fail "Could not load puppet private key from #{acme_private_key_path} to register with ACME server: #{e}"
+  end
+
+  # Path to the private key to use with the ACME client. Defaults to the puppet agent's private key.
+  def acme_private_key_path
+    if resource[:acme_private_key_path].nil? || resource[:acme_private_key_path].empty?
+      Puppet[:hostprivkey]
+    else
+      resource[:acme_private_key_path]
+    end
   end
 end

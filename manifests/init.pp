@@ -24,6 +24,10 @@
 # [*renew_within_days*]
 #   If an existing certificate would expire within this many days, it will be renewed. Defaults to 30 days.
 #
+# [*acme_private_key_path*]
+#   The path to the private key file to use for ACME registration (not the certificate private key). If specified, this file must already exist.
+#   Defaults to the puppet agent's private key.
+#
 # [*aws_access_key_id*]
 #   The AWS Access Key ID to use to modify Route 53 records to authorize domains.
 #   Defaults to no credentials (e.g. will use the AWS SDK default methods for finding credentials, or fail trying to look them up)
@@ -55,6 +59,7 @@ class acme_certificates(
   $agree_to_terms_url    = undef,
   $authorization_timeout = 300,
   $renew_within_days     = 30,
+  $acme_private_key_path = undef,
   $aws_access_key_id     = undef,
   $aws_secret_access_key = undef,
   $route53_zone_id       = undef,

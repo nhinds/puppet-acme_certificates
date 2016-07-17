@@ -18,12 +18,16 @@ Puppet::Type.newtype(:acme_certificate) do
 
   newparam(:authorization_timeout)
   newparam(:renew_within_days)
+  newparam(:acme_private_key_path)
 
   newparam(:aws_access_key_id)
   newparam(:aws_secret_access_key)
   newparam(:route53_zone_id)
 
   autorequire(:file) do
-    self[:private_key_path] unless self[:generate_private_key]
+    files = []
+    files << self[:private_key_path] unless self[:generate_private_key]
+    files << self[:acme_private_key_path] unless self[:acme_private_key_path].nil? || self[:acme_private_key_path].empty?
+    files
   end
 end

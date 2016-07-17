@@ -42,6 +42,15 @@ describe 'acme_certificates::cert' do
     end
   end
 
+  context 'with the ACME private key in the catalog' do
+    let(:pre_condition) { 'file { "/tmp/acme.key": ensure => file }'}
+    let(:params) { super().merge(acme_private_key_path: '/tmp/acme.key') }
+
+    it 'should require the ACME private key' do
+      should contain_acme_certificate('/tmp/temporary.crt').that_requires('File[/tmp/acme.key]')
+    end
+  end
+
   context 'when generating the private key' do
     let(:params) { super().merge(generate_private_key: true) }
 
@@ -108,6 +117,10 @@ describe 'acme_certificates::cert' do
     renew_within_days: {
       default: 30,
       override: 7
+    },
+    acme_private_key_path: {
+      default: '',
+      override: '/var/cache/acme.key'
     }
   }.each do |param, options|
     context "when #{param} is specified" do
