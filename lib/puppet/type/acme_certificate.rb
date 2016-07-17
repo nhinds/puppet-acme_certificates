@@ -29,10 +29,4 @@ Puppet::Type.newtype(:acme_certificate) do
   autorequire(:file) do
     self[:private_key_path] unless self[:generate_private_key]
   end
-
-  autobefore(:file) do
-    before = [self[:certificate_path]]
-    before << self[:certificate_chain_path] if self[:certificate_chain_path]
-    before << self[:private_key_path] if self[:generate_private_key]
-  end
 end

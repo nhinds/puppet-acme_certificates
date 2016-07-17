@@ -4,14 +4,14 @@
 #
 # === Parameters
 #
-# [*certificate_path*]
-#   The file to place the signed certificate in. Defaults to the title
+# [*common_name*]
+#   The common name of the certificate.
 #
 # [*private_key_path*]
 #   The path to the private key file. If generate_private_key is not true, this file must already exist.
 #
-# [*common_name*]
-#   The common name of the certificate.
+# [*certificate_path*]
+#   The file to place the signed certificate in. Defaults to the title
 #
 # [*certificate_chain_path*]
 #   The file to place the certificate chain in. Defaults to not writing the certificate chain to disk
@@ -87,9 +87,9 @@
 #
 
 define acme_certificates::cert(
-  $certificate_path = $title,
-  $private_key_path,
   $common_name,
+  $private_key_path,
+  $certificate_path = $title,
   $certificate_chain_path = undef,
   $combine_certificate_and_chain = false,
   $alternate_names = [],
@@ -124,9 +124,6 @@ define acme_certificates::cert(
   # TODO validate syntax (mailto: / tel:)
 
   $_directory = pick_default($directory, $::acme_certificates::directory)
-  if empty($_directory) {
-    fail('Must specify `directory` in acme_certificates::cert or acme_certificates')
-  }
 
   # $agree_to_terms_url is optional in the ACME spec - it is required by Let's Encrypt, but ACME servers in general may not require this
   $_agree_to_terms_url = pick_default($agree_to_terms_url, $::acme_certificates::agree_to_terms_url)
@@ -157,27 +154,30 @@ define acme_certificates::cert(
   }
 
   file { $certificate_path:
-    ensure => file,
-    owner  => $owner,
-    group  => $group,
-    mode   => $certificate_mode,
+    ensure  => file,
+    owner   => $owner,
+    group   => $group,
+    mode    => $certificate_mode,
+    require => Acme_certificate[$certificate_path],
   }
 
   if $certificate_chain_path {
     file { $certificate_chain_path:
-      ensure => file,
-      owner  => $owner,
-      group  => $group,
-      mode   => $certificate_chain_mode,
+      ensure  => file,
+      owner   => $owner,
+      group   => $group,
+      mode    => $certificate_chain_mode,
+      require => Acme_certificate[$certificate_path],
     }
   }
 
   if $generate_private_key {
     file { $private_key_path:
-      ensure => file,
-      owner  => $owner,
-      group  => $group,
-      mode   => $private_key_mode,
+      ensure  => file,
+      owner   => $owner,
+      group   => $group,
+      mode    => $private_key_mode,
+      require => Acme_certificate[$certificate_path],
     }
   }
 }

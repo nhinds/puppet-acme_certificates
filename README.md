@@ -145,14 +145,14 @@ default value specified in the `acme_certificates` class.
 
 #### Parameters
 
-##### `certificate_path`
-The file to place the signed certificate in. Defaults to the title
+##### `common_name`
+The common name of the certificate.
 
 ##### `private_key_path`
 The path to the private key file. If `generate_private_key` is not true, this file must already exist.
 
-##### `common_name`
-The common name of the certificate.
+##### `certificate_path`
+The file to place the signed certificate in. Defaults to the title
 
 ##### `certificate_chain_path`
 The file to place the certificate chain in. Defaults to not writing the certificate chain to disk
