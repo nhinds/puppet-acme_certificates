@@ -14,6 +14,37 @@ Puppet::Type.newtype(:acme_certificate) do
   newparam(:private_key_path)
   newparam(:generate_private_key, boolean: true, parent: Puppet::Parameter::Boolean)
 
+  newparam(:certificate_mode) do
+    validate do |value|
+      # Verify this value is a valid octal string
+      Integer(value, 8)
+    end
+
+    munge do |value|
+      Integer(value, 8)
+    end
+  end
+  newparam(:certificate_chain_mode) do
+    validate do |value|
+      # Verify this value is a valid octal string
+      Integer(value, 8)
+    end
+
+    munge do |value|
+      Integer(value, 8)
+    end
+  end
+  newparam(:private_key_mode) do
+    validate do |value|
+      # Verify this value is a valid octal string
+      Integer(value, 8)
+    end
+
+    munge do |value|
+      Integer(value, 8)
+    end
+  end
+
   newparam(:contact)
   newparam(:directory)
   newparam(:agree_to_terms_url)

@@ -45,7 +45,7 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
     cert = acme_client.new_certificate(csr)
     if resource.generate_private_key? && !private_key_existed
       Puppet.debug("Writing private key to #{resource[:private_key_path]}")
-      File.write(resource[:private_key_path], cert.request.private_key.to_pem)
+      File.write(resource[:private_key_path], cert.request.private_key.to_pem, perm: resource[:private_key_mode])
     end
 
     cert_content = if resource.combine_certificate_and_chain?
@@ -54,11 +54,11 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
       cert.to_pem
     end
     Puppet.debug("Writing certificate to #{resource[:certificate_path]}")
-    File.write(resource[:certificate_path], cert_content)
+    File.write(resource[:certificate_path], cert_content, perm: resource[:certificate_mode])
 
     if resource[:certificate_chain_path]
       Puppet.debug("Writing certificate chain to #{resource[:certificate_chain_path]}")
-      File.write(resource[:certificate_chain_path], cert.chain_to_pem)
+      File.write(resource[:certificate_chain_path], cert.chain_to_pem, resource[:certificate_chain_mode])
     end
   end
 
