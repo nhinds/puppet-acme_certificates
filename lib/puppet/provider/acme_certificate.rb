@@ -43,12 +43,12 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
     authorize_domains
 
     cert = acme_client.new_certificate(csr)
-    if resource[:generate_private_key] && !private_key_existed
+    if resource.generate_private_key? && !private_key_existed
       Puppet.debug("Writing private key to #{resource[:private_key_path]}")
       File.write(resource[:private_key_path], cert.request.private_key.to_pem)
     end
 
-    cert_content = if resource[:combine_certificate_and_chain]
+    cert_content = if resource.combine_certificate_and_chain?
       cert.fullchain_to_pem
     else
       cert.to_pem
@@ -108,7 +108,7 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
 
   def authorize_domains
     # TODO check if each domain is already authorized before going down the slow path of requesting it to be authorized
-    [*resource[:alternate_names], resource[:common_name]].each do |domain|
+    csr.names.each do |domain|
       Puppet.debug("Authorizing domain '#{domain}'")
       authorization = acme_client.authorize(domain: domain)
       challenge = handle_authorization authorization
@@ -147,11 +147,11 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
     @csr ||= begin
       csr_params = {
         common_name: resource[:common_name],
-        names: resource[:alternate_names],
+        names: Array(resource[:alternate_names]),
       }
       if File.exist? resource[:private_key_path]
         csr_params[:private_key] = ::OpenSSL::PKey::RSA.new(File.read resource[:private_key_path])
-      elsif !resource[:generate_private_key]
+      elsif !resource.generate_private_key?
         fail "Could not generate certificate #{resource[:certificate_path]}: private key #{resource[:private_key_path]} does not exist"
       end
 

@@ -1,3 +1,5 @@
+require 'puppet/parameter/boolean'
+
 Puppet::Type.newtype(:acme_certificate) do
   @doc = 'Request a signed certificate from an ACME CA.'
 
@@ -5,19 +7,27 @@ Puppet::Type.newtype(:acme_certificate) do
 
   newparam(:certificate_path, namevar: true)
   newparam(:certificate_chain_path)
-  newparam(:combine_certificate_and_chain)
+  newparam(:combine_certificate_and_chain, boolean: true, parent: Puppet::Parameter::Boolean)
 
   newparam(:common_name)
   newparam(:alternate_names)
   newparam(:private_key_path)
-  newparam(:generate_private_key)
+  newparam(:generate_private_key, boolean: true, parent: Puppet::Parameter::Boolean)
 
   newparam(:contact)
   newparam(:directory)
   newparam(:agree_to_terms_url)
 
-  newparam(:authorization_timeout)
-  newparam(:renew_within_days)
+  newparam(:authorization_timeout) do
+    munge do |value|
+      Integer(value)
+    end
+  end
+  newparam(:renew_within_days) do
+    munge do |value|
+      Integer(value)
+    end
+  end
   newparam(:acme_private_key_path)
 
   newparam(:aws_access_key_id)
