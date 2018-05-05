@@ -7,6 +7,10 @@
 # [*gem_provider*]
 #   The package provider for intalling gems. Defaults to 'gem', the system gem provider.
 #
+# [*acme_client_version*]
+#   The version of the acme-client gem to install. Defaults to '~> 2.0', to install the latest 2.x version. This must install a
+#   compatible version of the library -- currently only 2.x is compatible.
+#
 # === Examples
 #
 #  class { 'acme_certificates::gems':
@@ -17,9 +21,12 @@
 #
 # Copyright 2016 Nicholas Hinds, unless otherwise noted.
 #
-class acme_certificates::gems($gem_provider = gem) {
+class acme_certificates::gems(
+  $gem_provider        = gem,
+  $acme_client_version = '~> 2.0',
+) {
   package { 'acme-client':
-    ensure   => '~> 2.0',
+    ensure   => $acme_client_version,
     provider => $gem_provider,
   }
 
