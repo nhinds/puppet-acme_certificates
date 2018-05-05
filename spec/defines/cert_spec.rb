@@ -107,8 +107,8 @@ describe 'acme_certificates::cert' do
 
   {
     directory:{
-      default: 'https://acme-staging.api.letsencrypt.org/directory',
-      override: 'https://acme-v01.api.letsencrypt.org/directory'
+      default: 'https://acme-staging-v02.api.letsencrypt.org/directory',
+      override: 'https://acme-v02.api.letsencrypt.org/directory'
     },
     authorization_timeout: {
       default: 300,

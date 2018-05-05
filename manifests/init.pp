@@ -21,6 +21,9 @@
 # [*authorization_timeout*]
 #   The time, in seconds, to wait for the ACME server to process pending domain authorizations before timing out. Defaults to 5 minutes.
 #
+# [*order_timeout*]
+#   The time, in seconds, to wait for the ACME server to process pending certificate orders before timing out. Defaults to 5 minutes.
+#
 # [*renew_within_days*]
 #   If an existing certificate would expire within this many days, it will be renewed. Defaults to 30 days.
 #
@@ -44,7 +47,7 @@
 #  class { 'acme_certificates':
 #    manage_gems        => true,
 #    contact            => 'mailto:cert-admin@example.com',
-#    directory          => 'https://acme-v01.api.letsencrypt.org/directory',
+#    directory          => 'https://acme-v02.api.letsencrypt.org/directory',
 #    agree_to_terms_url => 'https://letsencrypt.org/documents/LE-SA-v1.0.1-July-27-2015.pdf',
 #  }
 #
@@ -55,9 +58,10 @@
 class acme_certificates(
   $manage_gems           = false,
   $contact               = undef,
-  $directory             = 'https://acme-staging.api.letsencrypt.org/directory',
+  $directory             = 'https://acme-staging-v02.api.letsencrypt.org/directory',
   $agree_to_terms_url    = undef,
   $authorization_timeout = 300,
+  $order_timeout         = 300,
   $renew_within_days     = 30,
   $acme_private_key_path = undef,
   $aws_access_key_id     = undef,

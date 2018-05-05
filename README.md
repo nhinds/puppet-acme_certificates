@@ -56,10 +56,10 @@ class { 'acme_certificates':
   contact            => 'mailto:cert-admin@example.com',
 
   # Uncomment this to use the real Let's Encrypt server - this module defaults to the staging server
-  # directory        => 'https://acme-v01.api.letsencrypt.org/directory',
+  # directory        => 'https://acme-v02.api.letsencrypt.org/directory',
 
   # Agree to the terms of service for Let's Encrypt -- read the terms before setting this parameter
-  agree_to_terms_url => 'https://letsencrypt.org/documents/LE-SA-v1.0.1-July-27-2015.pdf',
+  agree_to_terms_url => 'https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf',
 
   # The ID of an existing Route 53 zone to create DNS records under
   route53_zone_id    => 'ABC123',

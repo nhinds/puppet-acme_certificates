@@ -6,7 +6,7 @@ gem 'puppetlabs_spec_helper', '>= 0.1.0'
 gem 'puppet-lint', '>= 0.3.2'
 gem 'facter', '>= 1.7.0'
 gem 'metadata-json-lint'
-gem 'acme-client'
-# Workaround https://github.com/nov/json-jwt/issues/39
-gem 'json-jwt', '~> 1.5.2'
+gem 'acme-client', '~> 2.0'
 gem 'aws-sdk'
+# Required for puppet's pip provider to function in specs
+gem 'xmlrpc'

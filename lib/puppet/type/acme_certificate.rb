@@ -54,6 +54,11 @@ Puppet::Type.newtype(:acme_certificate) do
       Integer(value)
     end
   end
+  newparam(:order_timeout) do
+    munge do |value|
+      Integer(value)
+    end
+  end
   newparam(:renew_within_days) do
     munge do |value|
       Integer(value)

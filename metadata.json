@@ -1,6 +1,6 @@
 {
   "name": "nhinds-acme_certificates",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "nhinds",
   "summary": "Manages certificates on disk using an ACME Certificate Authority such as Let's Encrypt",
   "license": "Apache-2.0",

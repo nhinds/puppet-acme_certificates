@@ -18,15 +18,8 @@
 # Copyright 2016 Nicholas Hinds, unless otherwise noted.
 #
 class acme_certificates::gems($gem_provider = gem) {
-  # Workaround backwards-incompatible changes in later json-jwt gem versions. This only works if a newer version is not already installed :(
-  package { 'json-jwt':
-    ensure   => '1.5.2',
-    provider => $gem_provider,
-    before   => Package['acme-client']
-  }
-
   package { 'acme-client':
-    ensure   => installed,
+    ensure   => '~> 2.0',
     provider => $gem_provider,
   }
 

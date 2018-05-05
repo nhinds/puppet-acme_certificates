@@ -40,25 +40,26 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
     private_key_existed = File.exist? resource[:private_key_path]
 
     register_client
-    authorize_domains
+    order = authorize_domains
+    finalize(order)
 
-    cert = acme_client.new_certificate(csr)
+    certificate, chain = order.certificate.split(/(?<=-----END CERTIFICATE-----)/, 2).map(&:strip)
     if resource.generate_private_key? && !private_key_existed
       Puppet.debug("Writing private key to #{resource[:private_key_path]}")
-      File.write(resource[:private_key_path], cert.request.private_key.to_pem, perm: resource[:private_key_mode])
+      File.write(resource[:private_key_path], csr.private_key.to_pem, perm: resource[:private_key_mode])
     end
 
     cert_content = if resource.combine_certificate_and_chain?
-      cert.fullchain_to_pem
+      "#{certificate}\n#{chain}"
     else
-      cert.to_pem
+      certificate
     end
     Puppet.debug("Writing certificate to #{resource[:certificate_path]}")
     File.write(resource[:certificate_path], cert_content, perm: resource[:certificate_mode])
 
     if resource[:certificate_chain_path]
       Puppet.debug("Writing certificate chain to #{resource[:certificate_chain_path]}")
-      File.write(resource[:certificate_chain_path], cert.chain_to_pem, resource[:certificate_chain_mode])
+      File.write(resource[:certificate_chain_path], chain, resource[:certificate_chain_mode])
     end
   end
 
@@ -75,72 +76,70 @@ class Puppet::Provider::AcmeCertificate < Puppet::Provider
   private
 
   def register_client
-    begin
-      registration = acme_client.register(contact: resource[:contact])
-    rescue ::Acme::Client::Error::Malformed => e
-      Puppet.debug("Error performing new registration, attempting to recover: #{e}")
-      # Handling existing registrations not yet supported by acme-client, so poke at the internals a little :(
-      # https://github.com/unixcharles/acme-client/issues/81
-      env = acme_client.connection.app.env
-      location = env.response_headers['location']
-      if env.status == 409 && location
-        Puppet.debug("Found existing registration for this private key at #{location}")
-        # ACME spec says to POST an empty update at the resource to retrieve the registration
-        response = acme_client.connection.post(location, { resource: 'reg' })
-        # The reg resource returns the same data as the new-reg resource, but the Registration class expects a 'location' header...
-        response.headers['location'] = location
-        # Now hand it to acme-client's Registration class to parse
-        registration = ::Acme::Client::Resources::Registration.new(acme_client, response)
-      else
-        fail "Unexpected error performing ACME registration: #{e.message}"
-      end
-    end
-    terms_of_service_uri = registration && registration.term_of_service_uri
+    terms_of_service_uri = acme_client.terms_of_service
     if terms_of_service_uri
       if terms_of_service_uri == resource[:agree_to_terms_url]
-        registration.agree_terms
+        terms_of_service_agreed = true
       else
         fail "ACME Server requires you to agree to the terms of service at #{terms_of_service_uri}.\n" \
              'If you accept the terms, please set the agree_to_terms_url parameter to this URL'
       end
     end
+
+    acme_client.new_account(contact: resource[:contact], terms_of_service_agreed: terms_of_service_agreed)
   end
 
   def authorize_domains
-    # TODO check if each domain is already authorized before going down the slow path of requesting it to be authorized
-    csr.names.each do |domain|
-      Puppet.debug("Authorizing domain '#{domain}'")
-      authorization = acme_client.authorize(domain: domain)
-      challenge = handle_authorization authorization
-      begin
-        challenge.request_verification
+    acme_client.new_order(identifiers: csr.names).tap do |order|
+      challenges = order.authorizations.map do |auth|
+        next if auth.status == 'valid'
+        Puppet.debug("Authorizing domain '#{auth.domain}'")
+        challenge = handle_authorization auth
         begin
-          Puppet.debug("Waiting for domain '#{domain}' to be authorized")
-          Timeout::timeout(resource[:authorization_timeout]) do
-            # TODO don't wait 5 minutes on invalid statuses
-            while (status = challenge.verify_status) != 'valid'
-              Puppet.debug("Domain '#{domain}' not yet authorized (#{status})")
-              fail "Domain '#{domain}' has unexpected authorization status '#{status}'. Error: '#{challenge.error}'" if %w(invalid revoked).include? status
-              sleep 1
+          challenge.request_validation
+          begin
+            Puppet.debug("Waiting for domain '#{auth.domain}' to be authorized")
+            Timeout::timeout(resource[:authorization_timeout]) do
+              wait_while(challenge, %w(pending processing), "Domain '#{auth.domain}' not yet authorized")
+              fail "Domain '#{auth.domain}' has unexpected authorization status '#{challenge.status}'. Error: '#{challenge.error}'" unless challenge.status == 'valid'
+              auth.reload
+              wait_while(auth, %w(pending processing), "Authorization for domain '#{auth.domain}' is not yet valid")
+              fail "Authorization for domain '#{auth.domain}' has unexpected status '#{auth.status}'" unless auth.status == 'valid'
             end
+          rescue Timeout::Error
+            fail "Timed out waiting for ACME server to verify domain '#{auth.domain}' after #{resource[:authorization_timeout]} seconds"
           end
-        rescue Timeout::Error
-          fail "Timed out waiting for ACME server to verify domain '#{domain}' after #{resource[:authorization_timeout]} seconds"
+        ensure
+          clean_authorization auth, challenge
         end
-      ensure
-        clean_authorization authorization, challenge
+        Puppet.debug("Domain '#{auth.domain}' successfully authorized")
       end
-      Puppet.debug("Domain '#{domain}' successfully authorized")
+    end
+  end
+
+  def finalize(order)
+    order.finalize(csr: csr)
+    begin
+      Puppet.debug("Waiting for order to be finalized for #{csr.names}")
+      Timeout::timeout(resource[:order_timeout]) do
+        wait_while(order, %w(pending processing), "Order for #{csr.names} is still processing")
+        fail "Order for #{csr.names} has unexpected status '#{order.status}'" unless order.status == 'valid'
+      end
+    rescue Timeout::Error
+      fail "Timed out waiting for ACME server to finalize order for #{csr.names} after #{resource[:authorization_timeout]} seconds"
+    end
+  end
+
+  def wait_while(obj, statuses, msg)
+    while statuses.include? obj.status
+      Puppet.debug msg
+      sleep 1
+      obj.reload
     end
   end
 
   def acme_client
-    @acme_client ||= ::Acme::Client.new(private_key: acme_private_key, directory_uri: resource[:directory], endpoint: endpoint)
-  end
-
-  # TODO this annoys me, should not be necessary
-  def endpoint
-    URI.join(resource[:directory], "/").to_s
+    @acme_client ||= ::Acme::Client.new(private_key: acme_private_key, directory: resource[:directory])
   end
 
   def csr
